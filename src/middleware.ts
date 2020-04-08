@@ -8,13 +8,13 @@ import * as _ from "lodash";
 import { LastActivityContext, UsersContext } from "./type";
 import { ActivityInstance } from "./models/activity";
 import { getLastActByGroup } from "./modules/activityHelper";
-import { findOneUnknowUserByDisplayName, registerUnknowUser } from "./modules/userHepler"
-
-
-
+import {
+  findOneUnknowUserByDisplayName,
+  registerUnknowUser
+} from "./modules/userHepler";
 
 export function registerUserToGroup() {
-  return async function (ctx: Context, next: () => Promise<null>) {
+  return async function(ctx: Context, next: () => Promise<null>) {
     const { groupId, userId } = ctx.event.source as Group;
     await database.UserGroup.upsert({
       groupId,
@@ -22,11 +22,16 @@ export function registerUserToGroup() {
       role: Role.User
     });
     await next();
-  }
+  };
 }
 
-export function isLastActFinished(callback?: (lastActivity: ActivityInstance) => Message) {
-  return async function isLastActFinished(ctx: LastActivityContext, next: () => Promise<void>) {
+export function isLastActFinished(
+  callback?: (lastActivity: ActivityInstance) => Message
+) {
+  return async function isLastActFinished(
+    ctx: LastActivityContext,
+    next: () => Promise<void>
+  ) {
     const { groupId } = ctx.event.source as Group;
     if (!groupId) {
       console.log("no group id");
@@ -46,7 +51,7 @@ export function isLastActFinished(callback?: (lastActivity: ActivityInstance) =>
       return await next();
     }
     await next();
-  }
+  };
 }
 
 function parserMultipleUsers(ctx: UsersContext & LastActivityContext) {
@@ -61,7 +66,8 @@ function parserMultipleUsers(ctx: UsersContext & LastActivityContext) {
         return user.substring(1);
       }
       return user;
-    }).filter(user => {
+    })
+    .filter(user => {
       //
       // remove duplicates
       //
@@ -74,30 +80,42 @@ function parserMultipleUsers(ctx: UsersContext & LastActivityContext) {
 }
 
 export function handelMultipleUser() {
-  return async function handelMultipleUser(ctx: UsersContext & LastActivityContext, next: () => Promise<void>) {
+  return async function handelMultipleUser(
+    ctx: UsersContext & LastActivityContext,
+    next: () => Promise<void>
+  ) {
     let users = parserMultipleUsers(ctx);
     console.log(users);
     const userIns = await Promise.all(
       users.map(async user => {
-        const userIns = await findOneUnknowUserByDisplayName(user, ctx.lastActivity);
+        const userIns = await findOneUnknowUserByDisplayName(
+          user,
+          ctx.lastActivity
+        );
         if (userIns) {
           return userIns;
         }
 
-        return await registerUnknowUser(user)
+        return await registerUnknowUser(user);
       })
     );
     ctx.users = userIns;
     await next();
-  }
+  };
 }
 
 export function isRemoveUsersInGroup() {
-  return async function isRemoveUsersInGroup(ctx: UsersContext & LastActivityContext, next: () => Promise<void>) {
+  return async function isRemoveUsersInGroup(
+    ctx: UsersContext & LastActivityContext,
+    next: () => Promise<void>
+  ) {
     let users = parserMultipleUsers(ctx);
     const userIns = await Promise.all(
       users.map(async user => {
-        const userIns = await findOneUnknowUserByDisplayName(user, ctx.lastActivity);
+        const userIns = await findOneUnknowUserByDisplayName(
+          user,
+          ctx.lastActivity
+        );
         if (userIns) {
           return userIns;
         }
@@ -106,5 +124,5 @@ export function isRemoveUsersInGroup() {
     );
     ctx.users = userIns;
     await next();
-  }
+  };
 }

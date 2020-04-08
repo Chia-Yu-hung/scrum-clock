@@ -5,31 +5,34 @@ import { UserInstance } from "../models/user";
  * Help Message: user say help!!
  *
  */
-export function HelpMessage(): line.TemplateMessage {
+export function pickDrawMethodMessage(): line.TemplateMessage {
   return {
     type: "template",
-    altText: "help list",
+    altText: "Draw ways",
     template: {
       type: "buttons",
-      title: "help list",
-      text: "Help List",
+      title: "Draw ways",
+      text: "Draw ways",
       actions: [
         {
           type: "postback",
-          label: "Game List",
-          data: "action=activity_list"
+          label: "Normal",
+          data: "action=normal"
         },
         {
           type: "postback",
-          label: "Group List",
-          data: "action=group_list"
+          label: "Memory",
+          data: "action=memory"
         }
       ]
     }
   } as line.TemplateMessage;
 }
 
-export function MemberMessage(title: string, users: UserInstance[]): line.Message {
+export function MemberMessage(
+  title: string,
+  users: UserInstance[]
+): line.Message {
   let message = title || "";
 
   message += "\n";

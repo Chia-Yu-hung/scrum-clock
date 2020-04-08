@@ -6,6 +6,7 @@ export interface UserAttributes {
   display_name?: string;
   picture_url?: string;
   type?: UserType;
+  count?: any;
 }
 
 export type UserInstance = Sequelize.Instance<UserAttributes> & UserAttributes;
@@ -29,6 +30,10 @@ export default (sequalize: Sequelize.Sequelize) => {
     picture_url: {
       type: Sequelize.STRING,
       allowNull: true
+    },
+    count: {
+      type: Sequelize.INTEGER,
+      defaultValue: 1
     }
   };
   return sequalize.define<UserInstance, UserAttributes>("user", attributes);

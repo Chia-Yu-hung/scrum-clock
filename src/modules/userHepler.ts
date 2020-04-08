@@ -1,7 +1,8 @@
 import * as line from "@line/bot-sdk";
 import database from "../database";
-import { UserType, LINE_VERIFY_USER_ID, Status} from "../config";
+import { UserType, LINE_VERIFY_USER_ID, Status } from "../config";
 import { ActivityInstance } from "../models/activity";
+import { Op } from "sequelize";
 
 /**
  * get user from group
@@ -9,7 +10,10 @@ import { ActivityInstance } from "../models/activity";
  * @param source
  */
 
-export async function updateUserByMessageEvent(client: line.Client, event: line.WebhookEvent): Promise<void> {
+export async function updateUserByMessageEvent(
+  client: line.Client,
+  event: line.WebhookEvent
+): Promise<void> {
   let line_user: line.Profile;
   let source: line.Group | line.User = event.source as any;
 
@@ -28,7 +32,7 @@ export async function updateUserByMessageEvent(client: line.Client, event: line.
     line_user = await client.getGroupMemberProfile(
       source.groupId,
       source.userId
-    )
+    );
 
     await Promise.all([
       await database.User.upsert({
@@ -48,12 +52,43 @@ export async function updateUserByMessageEvent(client: line.Client, event: line.
   }
 }
 
-export async function updateUserOfGroupWhenJoin(client: line.Client, event: line.MemberJoinEvent): Promise<void> {
+export async function updateUserCount(id: string): Promise<void> {
+  // reset the lucky guy
+  await database.User.update(
+    {
+      count: 1
+    },
+    {
+      where: {
+        id
+      }
+    }
+  );
+
+  // add others count
+  await database.User.update(
+    {
+      count: database.sequelize.literal("count + 1")
+    },
+    {
+      where: {
+        id: { [Op.ne]: id }
+      }
+    }
+  );
+}
+
+export async function updateUserOfGroupWhenJoin(
+  client: line.Client,
+  event: line.MemberJoinEvent
+): Promise<void> {
   if (event.source.type !== "group") {
     return;
   }
 
-  const members: line.User[] = event.joined.members.filter(member => member.type === "user");
+  const members: line.User[] = event.joined.members.filter(
+    member => member.type === "user"
+  );
 
   const groupId = event.source.groupId;
   const userProfile: line.Profile[] = await Promise.all(
@@ -67,7 +102,7 @@ export async function updateUserOfGroupWhenJoin(client: line.Client, event: line
         display_name: profile.displayName,
         picture_url: profile.pictureUrl,
         type: UserType.Line
-      })
+      });
     })
   );
 }
@@ -77,10 +112,13 @@ export async function findOneUser(id: any) {
     where: {
       id
     }
-  })
+  });
 }
 
-export async function findOneUnknowUserByDisplayName(name: string, activity: ActivityInstance) {
+export async function findOneUnknowUserByDisplayName(
+  name: string,
+  activity: ActivityInstance
+) {
   const user = await database.User.findOne({
     where: { display_name: name, type: UserType.Unknown },
     include: [

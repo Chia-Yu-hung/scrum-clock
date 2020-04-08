@@ -1,3 +1,18 @@
 import database from "../database";
 import { GroupInstance } from "../models/group";
-import { UserGroupInstance } from "../models/user_of_group";
+
+export async function findAllMembersOfGroup(group: any): Promise<any> {
+  return database.Group.findOne({
+    where: {
+      id: group
+    },
+
+    order: [[database.User, database.UserGroup, "role", "ASC"]],
+    include: [
+      {
+        model: database.User,
+        as: "users"
+      }
+    ]
+  });
+}
